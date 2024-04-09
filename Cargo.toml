@@ -21,7 +21,7 @@ dotenv = "0.15.0"
 secrecy = { version = "0.8", features = ["serde"] }
 
 uuid = { version = "0.8.1", features = ["v4"] }
-chrono = "0.4.15"
+chrono = "0.4.37"
 
 # tracing
 tracing = { version = "0.1", features = ["log"] }
@@ -40,6 +40,7 @@ features = [
     "uuid",
     "chrono",
     "migrate",
+    "offline",
 ]
 
 [dev-dependencies]
