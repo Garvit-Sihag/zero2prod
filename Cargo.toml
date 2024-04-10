@@ -17,6 +17,7 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 # The feature is not enabled by default to avoid pulling in
 # unnecessary dependencies for projects that do not need it.
 serde = { version = "1", features = ["derive"] }
+serde-aux = "3"
 dotenv = "0.15.0"
 secrecy = { version = "0.8", features = ["serde"] }
 
