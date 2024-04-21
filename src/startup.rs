@@ -1,8 +1,53 @@
+use crate::configuration::{DatabaseSettings, Settings};
 use crate::{email_client::EmailClient, routes::*};
 use actix_web::{dev::Server, web, App, HttpServer};
+use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 use std::net::TcpListener;
 use tracing_actix_web::TracingLogger;
+
+struct Application {
+    port: u16,
+    server: Server,
+}
+
+pub async fn get_connection_pool(configuration: &DatabaseSettings) -> PgPool {
+    PgPoolOptions::new()
+        .connect_timeout(std::time::Duration::from_secs(2))
+        .connect_lazy_with(configuration.with_db())
+}
+
+impl Application {
+    pub async fn build(configuration: Settings) -> Result<Self, std::io::Error> {
+        let connection = get_connection_pool(&configuration.database);
+
+        let address = format!(
+            "{}:{}",
+            configuration.application.host, configuration.application.port
+        );
+
+        let sender_email = configuration
+            .email_client
+            .sender()
+            .expect("falied to parse email");
+
+        let timeout = configuration.email_client.timeout();
+        let email_client = EmailClient::new(
+            configuration.email_client.base_url,
+            sender_email,
+            configuration.email_client.authorization_token,
+            timeout,
+        );
+        let listner = TcpListener::bind(address).expect("Falied to bind the port");
+        let port = listner.local_addr().unwrap().port();
+        let server = run(listner, connection, email_client)?;
+        Ok(Self { port, server })
+    }
+
+    pub fn port(&self) -> u16 {
+        self.port
+    }
+}
 
 pub fn run(
     listner: TcpListener,
