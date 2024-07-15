@@ -6,7 +6,7 @@ use sqlx::PgPool;
 use std::net::TcpListener;
 use tracing_actix_web::TracingLogger;
 
-struct Application {
+pub struct Application {
     port: u16,
     server: Server,
 }
@@ -19,7 +19,7 @@ pub async fn get_connection_pool(configuration: &DatabaseSettings) -> PgPool {
 
 impl Application {
     pub async fn build(configuration: Settings) -> Result<Self, std::io::Error> {
-        let connection = get_connection_pool(&configuration.database);
+        let connection = get_connection_pool(&configuration.database).await;
 
         let address = format!(
             "{}:{}",
@@ -46,6 +46,10 @@ impl Application {
 
     pub fn port(&self) -> u16 {
         self.port
+    }
+
+    pub async fn run_until_stopped(self) -> Result<(), std::io::Error> {
+        self.server.await
     }
 }
 
